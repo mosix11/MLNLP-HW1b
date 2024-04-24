@@ -9,6 +9,17 @@ from optuna.trial import TrialState
 
 dataset = DisCoTex(root=Path('./data'), batch_size=32, tokenizer="bpe")
 
+
+def get_gpu_device():
+    if torch.cuda.is_available():
+        return torch.device('cuda')
+    elif torch.backends.mps.is_available():
+        return torch.device('mps')
+    else : return None
+    
+def get_cpu_device():
+    return torch.device('cpu')
+
 def define_model(trial):
     # We optimize the number of layers, hidden units and dropout ratio in each layer.
     embedding_size = trial.suggest_int('embedding_size', 50, 300)
@@ -90,12 +101,3 @@ if __name__ == "__main__":
         
         
 
-def get_gpu_device():
-    if torch.cuda.is_available():
-        return torch.device('cuda')
-    elif torch.backends.mps.is_available():
-        return torch.device('mps')
-    else : return None
-    
-def get_cpu_device():
-    return torch.device('cpu')
