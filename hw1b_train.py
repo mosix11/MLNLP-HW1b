@@ -23,9 +23,9 @@ if __name__ == '__main__':
     if args.model == "SR":
         model = SentRegLSTM(
             vocab_size=dataset.tokenizer.get_vocab_size(),
-            embed_dim=64,
-            hidden_size=64,
-            num_layers=2,
+            embed_dim=256,
+            hidden_size=256,
+            num_layers=4,
             bidirectional=True,
             padd_index=dataset.tokenizer.get_pad_idx(),
             dropout=0.3
@@ -33,9 +33,9 @@ if __name__ == '__main__':
     elif args.model == "SC":
         model = SentClasLSTM(
             vocab_size=dataset.tokenizer.get_vocab_size(),
-            embed_dim=64,
-            hidden_size=64,
-            num_layers=2,
+            embed_dim=256,
+            hidden_size=256,
+            num_layers=4,
             bidirectional=True,
             padd_index=dataset.tokenizer.get_pad_idx(),
             dropout=0.3
