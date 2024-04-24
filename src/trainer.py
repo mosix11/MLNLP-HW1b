@@ -4,6 +4,7 @@ import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
 from . import utils
 
+
 class Trainer():
 
     def __init__(self, max_epochs, lr:float = 1e-5, run_on_gpu=False, gradient_clip_val=0, do_validation=True, write_summery=True):
@@ -41,7 +42,10 @@ class Trainer():
         self.model = model
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.model.parameters(), lr=self.lr)
+        return torch.optim.AdamW(self.model.parameters(), lr=self.lr)
+    
+    def configure_lr_scheduler(self, optimizer):
+        return torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3)
     
     def clip_gradients(self, grad_clip_val, model):
         params = [p for p in model.parameters() if p.requires_grad]
@@ -54,6 +58,7 @@ class Trainer():
         self.prepare_data(data)
         self.prepare_model(model)
         self.optim = self.configure_optimizers()
+        self.lr_scheduler = self.configure_lr_scheduler(self.optim)
         self.epoch = 0
         self.train_batch_idx = 0
         self.val_batch_idx = 0
@@ -86,6 +91,7 @@ class Trainer():
         for i, batch in enumerate(self.val_dataloader):
             with torch.no_grad():
                 loss = self.model.validation_step(self.prepare_batch(batch))
+                self.lr_scheduler.step(loss)
                 if self.write_sum:
                     self.writer.add_scalar('Loss/Val', loss, self.epoch*self.num_val_batches + i)
             self.val_batch_idx += 1
