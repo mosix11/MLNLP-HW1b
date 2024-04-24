@@ -6,12 +6,13 @@ from . import utils
 
 class Trainer():
 
-    def __init__(self, max_epochs, lr:float = 1e-5, run_on_gpu=False, gradient_clip_val=0):
+    def __init__(self, max_epochs, lr:float = 1e-5, run_on_gpu=False, gradient_clip_val=0, do_validation=True, write_summery=True):
         
         self.max_epochs = max_epochs
         self.gradient_clip_val = gradient_clip_val
         self.lr = lr
-
+        self.do_val = do_validation
+        self.write_sum = write_summery
         self.cpu = utils.get_cpu_device()
         self.gpu = utils.get_gpu_device()
         
@@ -19,7 +20,8 @@ class Trainer():
             raise RuntimeError("""gpu device not found!""")
         self.run_on_gpu = run_on_gpu
         
-        self.writer = SummaryWriter()
+        if self.write_sum:
+            self.writer = SummaryWriter()
 
     def prepare_data(self, data):
         self.train_dataloader = data.get_train_dataloader()
@@ -60,14 +62,16 @@ class Trainer():
         for self.epoch in range(self.max_epochs):
             self.fit_epoch()
         # self.model.save_plot()
-        self.writer.flush()
+        if self.write_sum:
+            self.writer.flush()
 
     def fit_epoch(self):
-        print('#########  Entering Epoch {} #########'.format(self.epoch))
+        print('#########  Entering Epoch {} #########'.format(self.epoch + 1))
         self.model.train()
         for i, batch in enumerate(self.train_dataloader):
             loss = self.model.training_step(self.prepare_batch(batch))
-            self.writer.add_scalar('Loss/Train', loss, self.epoch*self.num_train_batches + i)
+            if self.write_sum:
+                self.writer.add_scalar('Loss/Train', loss, self.epoch*self.num_train_batches + i)
             self.optim.zero_grad()
             with torch.no_grad():
                 loss.backward()
@@ -76,11 +80,12 @@ class Trainer():
 
                 self.optim.step()
             self.train_batch_idx += 1
-        if self.val_dataloader is None:
+        if self.val_dataloader is None or not self.do_val:
             return
         self.model.eval()
         for i, batch in enumerate(self.val_dataloader):
             with torch.no_grad():
                 loss = self.model.validation_step(self.prepare_batch(batch))
-                self.writer.add_scalar('Loss/Val', loss, self.epoch*self.num_val_batches + i)
+                if self.write_sum:
+                    self.writer.add_scalar('Loss/Val', loss, self.epoch*self.num_val_batches + i)
             self.val_batch_idx += 1
