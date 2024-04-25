@@ -17,7 +17,7 @@ class BaseSentenceClassifier(nn.Module):
     
     def validation_step(self, batch):
         Y_hat = self(*batch[:-1])
-        return self.loss(Y_hat, batch[-1])
+        return self.loss(Y_hat, batch[-1]), self.accuracy(torch.argmax(Y_hat, -1), batch[-1])
         
     def predict(self, input_seq: torch.LongTensor, valid_len:torch.LongTensor):
         """
@@ -60,7 +60,7 @@ class BaseSentenceRegressor(nn.Module):
     
     def validation_step(self, batch):
         Y_hat = self(*batch[:-1])
-        return self.loss(Y_hat, batch[-1])
+        return self.loss(Y_hat, batch[-1]), self.accuracy(Y_hat, batch[-1])
     
     def predict(self, input_seq: torch.LongTensor, valid_len:torch.LongTensor):
         """
@@ -185,7 +185,7 @@ class SentRegAttLSTM(BaseSentenceRegressor):
     def forward(self, padded_seqs, lens, H_c=None):
         # padded_seqs indexed and padded batch of sentences of size [B, S]
         # lens sequence valid lengths 
-        embeds = self.embed(padded_seqs) # [B, S, H]
+        embeds = self.embed(padded_seqs) # [B, S, E]
         packed_batch = pack_padded_sequence(embeds, lens.cpu(), batch_first=True, enforce_sorted=False)
         
         packed_output, (hidden_states, cell_state) = self.rnn(packed_batch)
@@ -204,6 +204,71 @@ class SentRegAttLSTM(BaseSentenceRegressor):
         
         return output
     
+    def loss(self, Y_hat, Y, averaged=True):
+        Y_hat = Y_hat.reshape((-1))
+        Y = Y.reshape((-1,)).to(torch.float32)
+        return F.mse_loss(
+        Y_hat, Y, reduction='mean' if averaged else 'none')
+        
+        
+
+class HierarchicalSentRegLSTM(BaseSentenceRegressor):
+    def __init__(self, vocab_size:int, embed_dim:int, hidden_size:int, num_layers:int,
+                 padd_index:int, dropout:float = 0, bidirectional: bool=False) -> None:
+        super().__init__()
+        self.num_layers = num_layers
+        self.hidden_size = hidden_size
+        
+        self.embed = nn.Embedding(vocab_size, embed_dim, padding_idx=padd_index)
+        # Initial LSTM layer
+        self.lstm_layers = nn.ModuleList([nn.LSTM(input_size=embed_dim,
+                                                  hidden_size=hidden_size,
+                                                  num_layers=1,
+                                                  batch_first=True,
+                                                  bidirectional=bidirectional,
+                                                  )])
+        
+        # Subsequent LSTM layers with reduced input size
+        for _ in range(1, num_layers):
+            self.lstm_layers.append(nn.LSTM(input_size=2*hidden_size,
+                                            hidden_size=hidden_size,
+                                            batch_first=True,
+                                            num_layers=1,
+                                            bidirectional=bidirectional,
+                                            ))
+        
+        self.ln_layers = nn.ModuleList([
+            nn.LayerNorm(2* hidden_size) for _ in range(num_layers)
+        ])
+        
+        self.dropout = nn.Dropout(dropout)
+        self.fc = nn.Linear(2*hidden_size, 1)  # Final output layer
+
+    def forward(self, padded_seqs, lens, H_c=None):
+        embed = self.embed(padded_seqs) # shape: [B, S, E]
+        packed_batch = pack_padded_sequence(embed, lens.cpu(), batch_first=True, enforce_sorted=False)
+        output = packed_batch
+        for i, (lstm, ln) in enumerate(zip(self.lstm_layers, self.ln_layers)):
+            output, _ = lstm(output)
+            if i == 0:
+                unpacked_output, unpacked_lengths = pad_packed_sequence(output, batch_first=True)  # unpacked_output: [batch_size, seq_len, num_directions * hidden_size]
+                output = unpacked_output
+            output = ln(output)
+            output = self.dropout(output)
+            
+            # Reduce sequence length by pooling if not the last layer
+            if i < self.num_layers - 1:
+                # output = torch.mean(output.reshape(output.size(0), -1, 2*output.size(2)), dim=2)
+                output = output.transpose(1, 2)
+                output = F.avg_pool1d(output, kernel_size=2, stride=2)
+                output = output.transpose(1, 2)
+
+        # Use the output of the last layer
+        output = output[:, -1, :]  # Taking the last time step's output
+        output = self.fc(output)
+        return output
+
+
     def loss(self, Y_hat, Y, averaged=True):
         Y_hat = Y_hat.reshape((-1))
         Y = Y.reshape((-1,)).to(torch.float32)
