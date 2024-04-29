@@ -110,13 +110,14 @@ class WordLevelTokenizer():
 class BPE():
     
     def __init__(self, str_list: list, pad_token:str = '<pad>', unk_token:str = '<unk>',
-                 pad_idx:int = 1, unk_idx:int = 0, root_dir:Path = Path('./spm')):
+                 pad_idx:int = 1, unk_idx:int = 0, root_dir:Path = Path('./outputs/spm')):
+        
         if not os.path.exists(root_dir):
             os.mkdir(root_dir)
-        self.root_dir = root_dir
-        self.train_file_dir = self.root_dir / 'train.txt'
-        self.saving_model_prefix = self.root_dir / 'it_bpe'
-        self.loading_model_dir = self.root_dir / 'it_bpe.model'
+        self.root_dir = root_dir.absolute()
+        self.train_file_dir = os.path.join(self.root_dir, 'train.txt')
+        self.saving_model_prefix = os.path.join(self.root_dir, 'it_bpe')
+        self.loading_model_dir = os.path.join(self.root_dir, 'it_bpe.model')
         if str_list == None or len(str_list) == 0:
             raise RuntimeError("Invalid list of strings")
         self.pad_token = pad_token

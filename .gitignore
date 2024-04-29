@@ -3,7 +3,9 @@
 runs/
 weights/
 spm/
-
+raytune/
+outputs/
+output/
 ###################
 __pycache__/
 

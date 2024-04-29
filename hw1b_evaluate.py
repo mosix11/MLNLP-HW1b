@@ -15,7 +15,7 @@ if __name__ == '__main__':
     parser.add_argument("-b", "--batch", help="test data loader batch size. set 1 to disable batch inference", type=int, default=32)
     args = parser.parse_args()
     
-    dataset = DisCoTex(root=Path('./data'), batch_size=args.batch, tokenizer=args.tokenizer)
+    dataset = DisCoTex(root_dir=Path('./data'), batch_size=args.batch, tokenizer=args.tokenizer)
     model = torch.load(Path(args.load))
     if args.gpu:
         model.to(utils.get_gpu_device())
@@ -29,7 +29,10 @@ if __name__ == '__main__':
 
         preds += predictions.tolist()
         labels += batch[2].tolist()
-        
+
+    # print(preds)
+    # print(labels)
+    
     print(model.accuracy(torch.tensor(preds), torch.tensor(labels)))
     
     

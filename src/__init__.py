@@ -1,4 +1,4 @@
 from .DisCoTex import DisCoTex
 from .models import SentClasLSTM, SentRegLSTM, SentRegAttLSTM, HierarchicalSentRegLSTM
 from .trainer import Trainer
-from .baselines import straified_baseline
+from .baselines import straified_baseline, simple_rnn_baseline

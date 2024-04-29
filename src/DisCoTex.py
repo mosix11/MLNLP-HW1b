@@ -25,7 +25,8 @@ from pathlib import Path
 class DisCoTex():
     
     def __init__(self,
-                 root:Path = Path('./data'),
+                 root_dir:Path = Path('./data'),
+                 outputs_dir = Path('./outputs'),
                  batch_size:int = 32,
                  num_workers:int = 1,
                  valset_ratio:float = 0.10,
@@ -34,7 +35,11 @@ class DisCoTex():
         super().__init__()
         
         self.batch_size = batch_size
-        self.root = root
+        self.root_dir = root_dir
+        if not outputs_dir.exists():
+            os.mkdir(outputs_dir)
+        self.outputs_dir = outputs_dir
+        
         self.num_workers = num_workers
         self.valset_ratio = valset_ratio
         
@@ -85,7 +90,8 @@ class DisCoTex():
             self.tokenizer = WordLevelTokenizer(str_list)
             
         elif self.tokenizer_type == "bpe":
-            bpe = BPE(str_list)
+            bpe = BPE(str_list, root_dir=self.outputs_dir.joinpath('spm/')) # ugly fix for ray tune absolute path problem
+            # bpe = BPE(str_list)
             bpe.train()
             bpe.load()
             self.tokenizer = bpe
@@ -97,10 +103,10 @@ class DisCoTex():
     def _load_data(self):
         data_splits = ['train', 'test']
         file_name = 'discotex-task2-{}-data.jsonl'
-        trainset = self._read_jsonl_file(self.root / file_name.format(data_splits[0]))
+        trainset = self._read_jsonl_file(os.path.join(self.root_dir, file_name.format(data_splits[0])))
         self.valset = trainset[:int(len(trainset) * self.valset_ratio)]
-        self.trainset = trainset[int(len(trainset) * self.valset_ratio):]    
-        self.testset = self._read_jsonl_file(self.root / file_name.format(data_splits[1]))
+        self.trainset = trainset[int(len(trainset) * self.valset_ratio):]
+        self.testset = self._read_jsonl_file(os.path.join(self.root_dir, file_name.format(data_splits[1])))
         self.valset = [(sample['text'], sample['label']) for sample in self.valset]
         self.trainset = [(sample['text'], sample['label']) for sample in self.trainset]
         self.testset = [(sample['text'], sample['label']) for sample in self.testset]

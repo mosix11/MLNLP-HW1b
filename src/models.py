@@ -128,15 +128,55 @@ class SentClasLSTM(BaseSentenceClassifier):
         Y_hat, Y, reduction='mean' if averaged else 'none')
 
     
+
+class SentRegRNN(BaseSentenceRegressor):
+    
+    def __init__(self, vocab_size:int, embed_dim:int, hidden_size:int, num_layers:int,
+                 padd_index:int, dropout:float = 0,
+                 loss_fn:str = "MSE") -> None:
+        super().__init__()
         
+        self.loss_fn = loss_fn
+        
+        self.embed = nn.Embedding(vocab_size, embed_dim, padding_idx=padd_index)
+        self.rnn = nn.RNN(input_size=embed_dim, hidden_size=hidden_size, num_layers=num_layers,
+                           dropout=dropout, batch_first=True)
+        self.output_layer = nn.Linear(in_features=hidden_size, out_features=1)
+        
+        
+    def forward(self, padded_seqs, lens, H_c=None):
+        # padded_seqs indexed and padded batch of sentences of size [B, S]
+        # lens sequence valid lengths 
+        embeds = self.embed(padded_seqs) # [B, S, H]
+        packed_batch = pack_padded_sequence(embeds, lens.cpu(), batch_first=True, enforce_sorted=False)
+        
+        packed_output, hidden_states = self.rnn(packed_batch)
+        
+        output = self.output_layer(hidden_states[-1,:,:])
+        return output
+    
+    
+    def loss(self, Y_hat, Y, averaged=True):
+        Y_hat = Y_hat.reshape((-1))
+        Y = Y.reshape((-1,)).to(torch.float32)
+        if self.loss_fn == "MSE":    
+            return F.mse_loss(
+                Y_hat, Y, reduction='mean' if averaged else 'none'
+            )
+        elif self.loss_fn == "MAE":
+            return F.l1_loss(
+                Y_hat, Y, reduction='mean' if averaged else 'none'
+            )  
         
 
 class SentRegLSTM(BaseSentenceRegressor):
     
     def __init__(self, vocab_size:int, embed_dim:int, hidden_size:int, num_layers:int,
-                 padd_index:int, dropout:float = 0, bidirectional: bool=False) -> None:
+                 padd_index:int, dropout:float = 0, bidirectional: bool=False, 
+                 loss_fn:str = "MSE") -> None:
         super().__init__()
         
+        self.loss_fn = loss_fn
         
         self.embed = nn.Embedding(vocab_size, embed_dim, padding_idx=padd_index)
         self.rnn = nn.LSTM(input_size=embed_dim, hidden_size=hidden_size, num_layers=num_layers,
@@ -160,8 +200,14 @@ class SentRegLSTM(BaseSentenceRegressor):
     def loss(self, Y_hat, Y, averaged=True):
         Y_hat = Y_hat.reshape((-1))
         Y = Y.reshape((-1,)).to(torch.float32)
-        return F.mse_loss(
-        Y_hat, Y, reduction='mean' if averaged else 'none')
+        if self.loss_fn == "MSE":    
+            return F.mse_loss(
+                Y_hat, Y, reduction='mean' if averaged else 'none'
+            )
+        elif self.loss_fn == "MAE":
+            return F.l1_loss(
+                Y_hat, Y, reduction='mean' if averaged else 'none'
+            )
     
     
 
@@ -169,8 +215,9 @@ class SentRegLSTM(BaseSentenceRegressor):
 class SentRegAttLSTM(BaseSentenceRegressor):
     
     def __init__(self, vocab_size:int, embed_dim:int, hidden_size:int, num_layers:int,
-                 padd_index:int, dropout:float = 0, bidirectional: bool=False) -> None:
+                 padd_index:int, dropout:float = 0, bidirectional: bool=False, loss_fn:str = "MSE") -> None:
         super().__init__()
+        self.loss_fn = loss_fn
         
         self.embed = nn.Embedding(vocab_size, embed_dim, padding_idx=padd_index)
         self.rnn = nn.LSTM(input_size=embed_dim, hidden_size=hidden_size, num_layers=num_layers,
@@ -207,17 +254,24 @@ class SentRegAttLSTM(BaseSentenceRegressor):
     def loss(self, Y_hat, Y, averaged=True):
         Y_hat = Y_hat.reshape((-1))
         Y = Y.reshape((-1,)).to(torch.float32)
-        return F.mse_loss(
-        Y_hat, Y, reduction='mean' if averaged else 'none')
+        if self.loss_fn == "MSE":    
+            return F.mse_loss(
+                Y_hat, Y, reduction='mean' if averaged else 'none'
+            )
+        elif self.loss_fn == "MAE":
+            return F.l1_loss(
+                Y_hat, Y, reduction='mean' if averaged else 'none'
+            )
         
         
 
 class HierarchicalSentRegLSTM(BaseSentenceRegressor):
     def __init__(self, vocab_size:int, embed_dim:int, hidden_size:int, num_layers:int,
-                 padd_index:int, dropout:float = 0, bidirectional: bool=False) -> None:
+                 padd_index:int, dropout:float = 0, bidirectional: bool=False, loss_fn:str = "MSE") -> None:
         super().__init__()
         self.num_layers = num_layers
         self.hidden_size = hidden_size
+        self.loss_fn = loss_fn
         
         self.embed = nn.Embedding(vocab_size, embed_dim, padding_idx=padd_index)
         # Initial LSTM layer
@@ -272,5 +326,11 @@ class HierarchicalSentRegLSTM(BaseSentenceRegressor):
     def loss(self, Y_hat, Y, averaged=True):
         Y_hat = Y_hat.reshape((-1))
         Y = Y.reshape((-1,)).to(torch.float32)
-        return F.mse_loss(
-        Y_hat, Y, reduction='mean' if averaged else 'none')
+        if self.loss_fn == "MSE":    
+            return F.mse_loss(
+                Y_hat, Y, reduction='mean' if averaged else 'none'
+            )
+        elif self.loss_fn == "MAE":
+            return F.l1_loss(
+                Y_hat, Y, reduction='mean' if averaged else 'none'
+            )
