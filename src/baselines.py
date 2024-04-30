@@ -55,5 +55,7 @@ def simple_rnn_baseline(dataset):
 
         preds += predictions.tolist()
         labels += batch[2].tolist()
-        
+    
+    pred_label = zip(preds, labels)
+    print(list(pred_label))
     print("Accuracy on test set is: ", model.accuracy(torch.tensor(preds), torch.tensor(labels)))
