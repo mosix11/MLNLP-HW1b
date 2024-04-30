@@ -43,7 +43,7 @@ def simple_rnn_baseline(dataset):
             num_layers=1,
             padd_index=dataset.tokenizer.get_pad_idx(),
         )
-    trainer = Trainer(max_epochs=500, lr=1e-5, optimizer_type="adam", run_on_gpu=True, use_lr_schduler=True)
+    trainer = Trainer(max_epochs=300, lr=1e-5, optimizer_type="adam", run_on_gpu=True, use_lr_schduler=True)
     trainer.fit(model, dataset)
     
     test_loader = dataset.get_test_dataloader()
