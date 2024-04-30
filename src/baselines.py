@@ -38,7 +38,7 @@ def straified_baseline(dataset):
 def simple_rnn_baseline(dataset):
     model = SentRegRNN(
             vocab_size=dataset.tokenizer.get_vocab_size(),
-            embed_dim=128,
+            embed_dim=96,
             hidden_size=64,
             num_layers=1,
             padd_index=dataset.tokenizer.get_pad_idx(),
