@@ -80,7 +80,7 @@ class Trainer():
         return optim
     
     def configure_lr_scheduler(self, optimizer, state_dict=None):
-        lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=30)
+        lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=60)
         if state_dict:
             lr_scheduler.load_state_dict(state_dict, map=self.gpu if self.run_on_gpu else self.cpu)
         return lr_scheduler

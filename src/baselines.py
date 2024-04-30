@@ -43,7 +43,7 @@ def simple_rnn_baseline(dataset):
             num_layers=1,
             padd_index=dataset.tokenizer.get_pad_idx(),
         )
-    trainer = Trainer(max_epochs=400, lr=1e-5, optimizer_type="rmsprop", run_on_gpu=True, use_lr_schduler=True)
+    trainer = Trainer(max_epochs=400, lr=1e-5, optimizer_type="adam", run_on_gpu=True, use_lr_schduler=True)
     trainer.fit(model, dataset)
     
     test_loader = dataset.get_test_dataloader()
@@ -56,6 +56,6 @@ def simple_rnn_baseline(dataset):
         preds += predictions.tolist()
         labels += batch[2].tolist()
     
-    pred_label = zip(preds, labels)
-    print(list(pred_label))
+    # pred_label = zip(preds, labels)
+    # print(list(pred_label))
     print("Accuracy on test set is: ", model.accuracy(torch.tensor(preds), torch.tensor(labels)))
