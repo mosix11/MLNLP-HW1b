@@ -28,7 +28,7 @@ if __name__ == '__main__':
         straified_baseline(ds)
         exit()
     elif args.base == 'bs2':
-        ds = DisCoTex(root_dir=Path('./data').absolute(), batch_size=32, tokenizer="bpe")
+        ds = DisCoTex(root_dir=Path('./data').absolute(), batch_size=64, tokenizer="word")
         simple_rnn_baseline(ds)
         exit()
         
