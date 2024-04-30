@@ -62,7 +62,7 @@ if __name__ == '__main__':
             num_layers=3,
             bidirectional=True,
             padd_index=dataset.tokenizer.get_pad_idx(),
-            dropout=0.5
+            dropout=0.3
         )
     elif args.model == "HSR":
         model = HierarchicalSentRegLSTM(
