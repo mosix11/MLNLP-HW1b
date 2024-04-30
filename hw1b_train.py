@@ -13,7 +13,7 @@ from src import straified_baseline, simple_rnn_baseline
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--base", help="whether to use base line or not. Set bs1 to run the simple baseline and bs2 for the rnn baseline", type=str, default=None)
-    parser.add_argument("-m", "--model", help="specify model type between \{SC, SR, SRA, HSR\}", type=str, default="SR")
+    parser.add_argument("-m", "--model", help="specify model type between \{SC, SR, SRA, HSR\}", type=str, default="SC")
     parser.add_argument("-t", "--tokenizer", help="specify tokenizer type between \{word, bpe\}", type=str, default="word")
     parser.add_argument("-e", "--epoch", help="number of epochs", type=int, default=20)
     parser.add_argument("-b", "--batch", help="batch size", type=int, default=64)

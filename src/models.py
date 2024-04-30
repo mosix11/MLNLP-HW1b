@@ -142,7 +142,7 @@ class SentRegRNN(BaseSentenceRegressor):
         self.rnn = nn.RNN(input_size=embed_dim, hidden_size=hidden_size, num_layers=num_layers,
                            dropout=dropout, batch_first=True)
         self.output_layer = nn.Linear(in_features=hidden_size, out_features=1)
-        
+
         
     def forward(self, padded_seqs, lens, H_c=None):
         # padded_seqs indexed and padded batch of sentences of size [B, S]
@@ -191,7 +191,8 @@ class SentRegLSTM(BaseSentenceRegressor):
         packed_batch = pack_padded_sequence(embeds, lens.cpu(), batch_first=True, enforce_sorted=False)
         
         packed_output, (hidden_states, cell_state) = self.rnn(packed_batch)
-        
+        print(hidden_states.shape)
+        exit()
         hidden = torch.cat((hidden_states[-2,:,:], hidden_states[-1,:,:]), dim = 1)
         output = self.output_layer(hidden)
         return output
@@ -237,7 +238,7 @@ class SentRegAttLSTM(BaseSentenceRegressor):
         
         packed_output, (hidden_states, cell_state) = self.rnn(packed_batch)
         
-        unpacked_output, unpacked_lengths = pad_packed_sequence(packed_output, batch_first=True)  # unpacked_output: [batch_size, seq_len, num_directions * hidden_size]
+        unpacked_output, unpacked_lengths = pad_packed_sequence(packed_output, batch_first=True)  # unpacked_output: [batch_size, seq_len, 2 * hidden_size]
 
         
         attention_scores = self.attention(unpacked_output)  # shape: [batch_size, sequence_length, 1]

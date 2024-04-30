@@ -124,7 +124,7 @@ if __name__ == "__main__":
         'loss_fn': tune.choice(['MSE', 'MAE']),
         'embedding_size': tune.choice([64, 96, 128, 192, 265]),
         'hidden_size': tune.choice([2**i for i in range(5, 9)]),
-        'num_layers': tune.choice([3, 4, 5, 6]),
+        'num_layers': tune.choice([2, 3, 4, 5, 6]),
         'dropout': tune.choice([0.2, 0.3, 0.4, 0.5]),
         'lr': tune.loguniform(1e-5, 1e-4),
         'optimizer_type': tune.choice(['adam', 'rmsprop', 'sgd']),

@@ -12,7 +12,7 @@ if __name__ == '__main__':
     parser.add_argument("-t", "--tokenizer", help="specify tokenizer type between \{word, bpe\}", type=str, default="word")
     parser.add_argument("-g", "--gpu", help="whether to use GPU for training or not", action="store_true")
     parser.add_argument("-l", "--load", help="where to load the weights of the model from", type=str, default="./weights/model.pt")
-    parser.add_argument("-b", "--batch", help="test data loader batch size. set 1 to disable batch inference", type=int, default=32)
+    parser.add_argument("-b", "--batch", help="test data loader batch size. set 1 to disable batch inference", type=int, default=200)
     args = parser.parse_args()
     
     dataset = DisCoTex(root_dir=Path('./data'), batch_size=args.batch, tokenizer=args.tokenizer)
@@ -30,8 +30,9 @@ if __name__ == '__main__':
         preds += predictions.tolist()
         labels += batch[2].tolist()
 
-    # print(preds)
-    # print(labels)
+    pred_label = zip(preds, labels)
+    
+    print(list(pred_label))
     
     print(model.accuracy(torch.tensor(preds), torch.tensor(labels)))
     

@@ -74,7 +74,8 @@ dl_train = ds.get_train_dataloader()
 dl_val = ds.get_val_dataloader()
 dl_test = ds.get_test_dataloader()
 
-print(get_avg_seq_len(dl_train))
+# print(get_avg_seq_len(dl_train))
+print(ds.tokenizer.get_vocab_size())
 # plot_data_dist(dl_train, dl_val, dl_test)
 
 
