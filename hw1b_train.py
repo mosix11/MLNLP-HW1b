@@ -57,7 +57,7 @@ if __name__ == '__main__':
     elif args.model == "SRA":
         model = SentRegAttLSTM(
             vocab_size=dataset.tokenizer.get_vocab_size(),
-            embed_dim=128,
+            embed_dim=96,
             hidden_size=64,
             num_layers=3,
             bidirectional=True,
@@ -77,7 +77,7 @@ if __name__ == '__main__':
         )
     
     
-    trainer = Trainer(max_epochs=args.epoch, lr=args.lr, optimizer_type="adam", use_lr_schduler=args.lrs, run_on_gpu=True)
+    trainer = Trainer(max_epochs=args.epoch, lr=args.lr, optimizer_type="rmsprop", use_lr_schduler=args.lrs, run_on_gpu=True)
     trainer.fit(model, dataset)
     
     if not os.path.exists(Path(args.save).parent):
