@@ -58,11 +58,11 @@ if __name__ == '__main__':
         model = SentRegAttLSTM(
             vocab_size=dataset.tokenizer.get_vocab_size(),
             embed_dim=128,
-            hidden_size=128,
-            num_layers=2,
+            hidden_size=64,
+            num_layers=3,
             bidirectional=True,
             padd_index=dataset.tokenizer.get_pad_idx(),
-            dropout=0.35
+            dropout=0.5
         )
     elif args.model == "HSR":
         model = HierarchicalSentRegLSTM(
