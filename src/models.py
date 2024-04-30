@@ -191,8 +191,7 @@ class SentRegLSTM(BaseSentenceRegressor):
         packed_batch = pack_padded_sequence(embeds, lens.cpu(), batch_first=True, enforce_sorted=False)
         
         packed_output, (hidden_states, cell_state) = self.rnn(packed_batch)
-        print(hidden_states.shape)
-        exit()
+
         hidden = torch.cat((hidden_states[-2,:,:], hidden_states[-1,:,:]), dim = 1)
         output = self.output_layer(hidden)
         return output
